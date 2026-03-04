@@ -1,0 +1,68 @@
+
+# ============================================================
+# HNW Lead Generation — LangGraph + Multi-Source Scraping
+# ============================================================
+
+# LangGraph + LangChain
+langgraph
+langchain
+langchain-core
+langchain-openai
+langchain-community
+
+# Azure OpenAI
+openai
+
+# Search APIs
+duckduckgo-search
+tavily-python
+google-api-python-client
+scrapegraphai
+yfinance
+
+# HTTP & Scraping
+requests
+httpx
+aiohttp
+beautifulsoup4
+lxml
+playwright
+fake-useragent
+selenium
+
+# Semantic Search
+sentence-transformers
+faiss-cpu
+chromadb
+numpy
+
+# Database
+psycopg2-binary
+sqlalchemy
+
+# Data & Export
+pandas
+openpyxl
+xlsxwriter
+pydantic
+
+# Utilities
+python-dotenv
+tenacity
+loguru
+rich
+tqdm
+python-dateutil
+typing-extensions
+
+python-dotenv
+pymongo
+
+# HTML parsing
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# LangChain + Tavily
+langchain
+langchain-community
+tavily-python

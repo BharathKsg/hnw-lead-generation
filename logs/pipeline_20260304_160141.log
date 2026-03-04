@@ -1,0 +1,20 @@
+2026-03-04 16:01:43,634  INFO      __main__  Starting pipeline for city: meghalaya
+2026-03-04 16:01:44,708  INFO      pipeline.orchestrator  ═══ HNW Pipeline start | city=meghalaya ═══
+2026-03-04 16:01:44,708  INFO      lib.search  [Tavily] searching: "meghalaya" richest people net worth billionaire millionaire
+2026-03-04 16:01:46,824  INFO      lib.search  [Tavily] 5 unique URLs found for meghalaya
+2026-03-04 16:01:46,825  INFO      pipeline.orchestrator  [search] 5 URLs to process
+2026-03-04 16:01:46,827  INFO      scrapers.scraper_chain  [requests] attempting https://www.hindustantimes.com/india-news/meghalaya-s-richest-candidate-is-a-school-dropout-with-assets-worth-rs-290-crore/story-3N1KSZFoKKaMXrhB6mG4BP.html
+2026-03-04 16:01:46,827  INFO      scrapers.scraper_chain  [requests] attempting https://timesofindia.indiatimes.com/india/ngaitlang-dhar-richest-meghalaya-nominee-with-rs-290-crore-assets/articleshow/62824716.cms
+2026-03-04 16:01:46,827  INFO      scrapers.scraper_chain  [requests] attempting https://skillcircle.in/top-10-richest-person-in-meghalaya/
+2026-03-04 16:01:46,828  INFO      scrapers.scraper_chain  [requests] attempting https://assamtribune.com/north-east/meghalayas-vincent-pala-among-top-10-richest-candidates-in-india-1529979
+2026-03-04 16:01:46,830  INFO      scrapers.scraper_chain  [requests] attempting https://caravanmagazine.in/reportage/making-it
+2026-03-04 16:01:47,018  INFO      scrapers.scraper_chain  [requests] ✓ success (12,949 chars) for https://timesofindia.indiatimes.com/india/ngaitlang-dhar-richest-meghalaya-nominee-with-rs-290-crore-assets/articleshow/62824716.cms
+2026-03-04 16:01:47,018  INFO      pipeline.orchestrator  [scrape] ✓ https://timesofindia.indiatimes.com/india/ngaitlang-dhar-richest-meghalaya-nominee-with-rs-290-crore-assets/articleshow/62824716.cms  (12,949 chars)
+2026-03-04 16:01:47,026  INFO      scrapers.scraper_chain  [requests] ✓ success (31,832 chars) for https://caravanmagazine.in/reportage/making-it
+2026-03-04 16:01:47,026  INFO      pipeline.orchestrator  [scrape] ✓ https://caravanmagazine.in/reportage/making-it  (31,832 chars)
+2026-03-04 16:01:47,047  INFO      scrapers.scraper_chain  [requests] ✓ success (5,247 chars) for https://www.hindustantimes.com/india-news/meghalaya-s-richest-candidate-is-a-school-dropout-with-assets-worth-rs-290-crore/story-3N1KSZFoKKaMXrhB6mG4BP.html
+2026-03-04 16:01:47,047  INFO      pipeline.orchestrator  [scrape] ✓ https://www.hindustantimes.com/india-news/meghalaya-s-richest-candidate-is-a-school-dropout-with-assets-worth-rs-290-crore/story-3N1KSZFoKKaMXrhB6mG4BP.html  (5,247 chars)
+2026-03-04 16:01:47,388  INFO      scrapers.scraper_chain  [requests] ✓ success (9,401 chars) for https://skillcircle.in/top-10-richest-person-in-meghalaya/
+2026-03-04 16:01:47,389  INFO      pipeline.orchestrator  [scrape] ✓ https://skillcircle.in/top-10-richest-person-in-meghalaya/  (9,401 chars)
+2026-03-04 16:01:48,019  INFO      scrapers.scraper_chain  [requests] ✓ success (2,200 chars) for https://assamtribune.com/north-east/meghalayas-vincent-pala-among-top-10-richest-candidates-in-india-1529979
+2026-03-04 16:01:48,019  INFO      pipeline.orchestrator  [scrape] ✓ https://assamtribune.com/north-east/meghalayas-vincent-pala-among-top-10-richest-candidates-in-india-1529979  (2,200 chars)
