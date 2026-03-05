@@ -13,7 +13,15 @@ from typing import List, Dict, Any
 from dotenv import load_dotenv
 load_dotenv()
 
+from config.settings import BLOCKED_DOMAINS
+
 logger = logging.getLogger(__name__)
+
+
+def _is_blocked(url: str) -> bool:
+    """Return True if the URL belongs to a domain we cannot scrape."""
+    url_lower = url.lower()
+    return any(domain in url_lower for domain in BLOCKED_DOMAINS)
 
 
 class HNWISearchService:
@@ -21,13 +29,12 @@ class HNWISearchService:
     QUERY_TEMPLATES = [
         '"{city}" richest people net worth billionaire millionaire',
         # '"{city}" wealthiest celebrity entrepreneur founder',
-        # '"{city}" Forbes richest net worth list',
         # '"{city}" IPO founder billionaire millionaire wealth',
         # '"{city}" high net worth CEO founder entrepreneur',
-        # '"{city}" top businessmen investors wealth 2024',
+        # '"{city}" top businessmen investors wealth of the year',
     ]
 
-    def __init__(self, api_key: str, max_results: int = 5):
+    def __init__(self, api_key: str, max_results: int = 10):
         from langchain_community.tools.tavily_search import TavilySearchResults
         self.search = TavilySearchResults(
             tavily_api_key=api_key,
@@ -47,23 +54,37 @@ class HNWISearchService:
             return []
 
     def search_hnwi(self, city: str) -> List[Dict[str, Any]]:
-        queries     = self.build_queries(city)
-        all_results = []
-        for q in queries:
-            all_results.extend(self.execute_search(q))
+        queries = self.build_queries(city)
+        seen: set  = set()   # global URL set across ALL queries
+        unique: List[Dict[str, Any]] = []
 
-        # deduplicate by URL
-        seen, unique = set(), []
-        for r in all_results:
-            url = r.get("url", "")
-            if url and url not in seen:
+        for q in queries:
+            results  = self.execute_search(q)
+            new_this = 0
+            skip_this = 0
+            for r in results:
+                url = r.get("url", "").strip()
+                if not url:
+                    continue
+                if url in seen:
+                    skip_this += 1
+                    logger.debug(f"[Tavily] duplicate URL skipped: {url}")
+                    continue
+                if _is_blocked(url):
+                    skip_this += 1
+                    logger.info(f"[Tavily] blocked domain skipped: {url}")
+                    continue
                 seen.add(url)
+                new_this += 1
                 unique.append({
                     "title":   r.get("title", ""),
                     "url":     url,
                     "content": r.get("content", ""),
                     "score":   r.get("score", 0),
                 })
+            logger.info(
+                f"[Tavily] query '{q[:60]}…' → {new_this} new, {skip_this} duplicate URLs skipped"
+            )
 
-        logger.info(f"[Tavily] {len(unique)} unique URLs found for {city}")
+        logger.info(f"[Tavily] {len(unique)} unique URLs total for '{city}'")
         return unique

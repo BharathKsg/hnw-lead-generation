@@ -44,14 +44,7 @@ def _scrape_one(item: Dict[str, Any]) -> Dict[str, Any]:
     Scrape a single URL through the fallback chain.
     Returns the item dict augmented with 'raw_text' (str | None).
     """
-    url = item["url"]
-
-    # Safety net — skip blocked domains even if they slipped past search filter
-    from config.settings import BLOCKED_DOMAINS
-    if any(domain in url.lower() for domain in BLOCKED_DOMAINS):
-        logger.info(f"[scrape] blocked domain — skipping {url}")
-        return {**item, "raw_text": None}
-
+    url  = item["url"]
     text = scrape_with_fallback(url, chain=SCRAPER_CHAIN)
     if text:
         logger.info(f"[scrape] ✓ {url}  ({len(text):,} chars)")
@@ -81,43 +74,18 @@ def _analyse_chunk(
     return leads
 
 
-def _has_valid_net_worth(lead: Dict) -> bool:
-    """
-    Returns True only if the lead has a non-null, non-zero numeric net_worth.
-    Skips leads where the LLM returned None / null / 0 / empty string.
-    """
-    nw = lead.get("net_worth")
-    if nw is None:
-        return False
-    try:
-        return True
-    except (TypeError, ValueError):
-        return False
+# def _qualify_lead(lead: Dict, min_score: int, min_worth_m: float) -> bool:
+#     """Return True if lead passes minimum thresholds."""
+#     score = lead.get("overall_hni_score", 0) or 0
+#     worth = lead.get("net_worth", 0) or 0
+#     currency = lead.get("net_worth_currency", "USD")
 
+#     # Convert net worth to millions USD for comparison
+#     worth_m = worth / 1_000_000
+#     if currency == "INR":
+#         worth_m = worth / 83_000_000   # approx 1 USD = 83 INR, express in M USD
 
-def _qualify_lead(lead: Dict, min_score: int, min_worth_m: float) -> bool:
-    """
-    Return True if lead passes ALL thresholds:
-      - net_worth must be present and > 0  (leads with None net_worth are dropped)
-      - net_worth (converted to M USD) >= min_worth_m
-      - overall_hni_score >= min_score
-    """
-    # ── BUG FIX: reject leads with missing/null net_worth ─────────────────────
-    if not _has_valid_net_worth(lead):
-        logger.debug(f"[filter] skipping '{lead.get('full_name')}' — net_worth is None/0")
-        return False
-
-    score    = lead.get("overall_hni_score", 0) or 0
-    worth    = float(lead.get("net_worth", 0))
-    currency = lead.get("net_worth_currency", "USD")
-
-    # Normalise to millions USD
-    if currency == "INR":
-        worth_m = worth / 83_000_000   # 1 USD ≈ 83 INR → express in M USD
-    else:
-        worth_m = worth / 1_000_000
-
-    return score >= min_score and worth_m >= min_worth_m
+#     return score >= min_score and worth_m >= min_worth_m
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -127,7 +95,6 @@ def _qualify_lead(lead: Dict, min_score: int, min_worth_m: float) -> bool:
 class HNWPipeline:
     def __init__(self, city: str = TARGET_CITY):
         self.city = city
-
         self.search_svc = HNWISearchService(api_key=TAVILY_API_KEY)
         self.analyser   = AzureAnalyser()
         self.db         = LeadStore()
@@ -137,41 +104,40 @@ class HNWPipeline:
     def run(self) -> List[Dict]:
         logger.info(f"═══ HNW Pipeline start | city={self.city} ═══")
         t0 = time.time()
-
+        print(f"Running HNWPipeline for city: {self.city}")
         # 1. Discover URLs via Tavily
         url_items = self.search_svc.search_hnwi(self.city)
         logger.info(f"[search] {len(url_items)} URLs to process")
-
+        print("url_itemsurl_itemsurl_itemsurl_items",url_items)
         if not url_items:
             logger.warning("[search] no URLs found – aborting.")
             return []
-
+#         url_items = data = [
+#     {
+#         "title": "Top 10 Richest Person In Meghalaya 2025 Exclusive List",
+#         "url": "https://skillcircle.in/top-10-richest-person-in-meghalaya/",
+#         "content": "Conrad Sangma has the most money in Meghalaya. He leads the state as Chief Minister and is part of a powerful political family. Read more",
+#         "score": 0
+#     }
+# ]
         # 2. Scrape URLs in parallel (SCRAPE_THREADS workers)
         scraped_items = self._parallel_scrape(url_items)
 
         # 3. Chunk + Analyse in parallel (ANALYSIS_THREADS workers)
         all_leads = self._parallel_analyse(scraped_items)
-
+        print("all_leadsall_leadsall_leadsall_leads",all_leads)
         # 4. Deduplicate across chunks
         # all_leads = self._deduplicate(all_leads)
-        # logger.info(f"leads with missing net_worth {len(all_leads)} unique leads")
-        
-        # 5. Filter by score / net worth  (leads with None net_worth are dropped here)
-        no_nw = [l for l in all_leads if not _has_valid_net_worth(l)]
-        if no_nw:
-            logger.info(
-                f"[filter] skipping {len(no_nw)} leads with missing net_worth: "
-                + ", ".join(l.get("full_name", "?") for l in no_nw[:10])
-            )
+        # logger.info(f"[dedup] {len(all_leads)} unique leads")
+
+        # 5. Filter by score / net worth
         # qualified = [
         #     l for l in all_leads
         #     if _qualify_lead(l, MIN_HNW_SCORE, MIN_NET_WORTH_MILLION)
         # ]
         # qualified = qualified[:MAX_LEADS_PER_RUN]
         # logger.info(f"[filter] {len(qualified)} leads meet thresholds")
-        print("no_nwno_nwno_nwno_nwno_nw",no_nw)
-        print("***********************************************")
-        print("all_leadsall_leadsall_leadsall_leads",all_leads)
+
         # 6. Store in MongoDB
         if all_leads:
             stored = self.db.upsert_leads(all_leads)
@@ -179,7 +145,6 @@ class HNWPipeline:
 
         elapsed = time.time() - t0
         logger.info(f"═══ Pipeline complete in {elapsed:.1f}s | {len(all_leads)} leads saved ═══")
-
         self.db.close()
         return all_leads
 

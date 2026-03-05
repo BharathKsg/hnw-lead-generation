@@ -78,17 +78,8 @@ class LeadStore:
             logger.info(f"[DB] upserted={result.upserted_count} modified={result.modified_count}")
             return affected
         except BulkWriteError as bwe:
-            # BUG FIX: partial writes still succeed — extract the counts
-            details  = bwe.details
-            upserted = len(details.get("upserted", []))
-            modified = details.get("nModified", 0)
-            affected = upserted + modified
-            logger.warning(
-                f"[DB] bulk write partial error — {affected} succeeded, "
-                f"{len(details.get('writeErrors', []))} failed: "
-                + str(details.get("writeErrors", []))[:200]
-            )
-            return affected
+            logger.warning(f"[DB] bulk write partial error: {bwe.details}")
+            return 0
 
     # ── Read ──────────────────────────────────────────────────────────────────
 

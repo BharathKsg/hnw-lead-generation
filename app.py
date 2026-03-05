@@ -600,10 +600,11 @@ def run_pipeline(city, log_queue):
         from pipeline.orchestrator import HNWPipeline
 
         log_queue.put(("info", f"Initialising pipeline for {city}…"))
+        print("[Pipeline] Starting HNW lead discovery for city:", city)
         pipeline = HNWPipeline(city=city)
 
         log_queue.put(("good", f"Searching for HNW profiles in {city}…"))
-
+        print("===============================================================")
         # Monkey-patch logger to forward to queue
         import logging
         class QueueHandler(logging.Handler):
@@ -613,7 +614,7 @@ def run_pipeline(city, log_queue):
                 if record.levelname == "ERROR":
                     level = "error"
                 log_queue.put((level, msg[-120:]))
-
+        print("++++++++++++++++++++++++++++++++++++++++++++++")
         root = logging.getLogger()
         qh = QueueHandler()
         root.addHandler(qh)
